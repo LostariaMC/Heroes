@@ -5,10 +5,10 @@ import org.bukkit.Location;
 
 public abstract class HEntity {
 
-    private final int STRENGHT_PERCENT_ADDED = 20;
-    private final int VITALITY_PERCENT_ADDED = 20;
-    private final int AGILITY_PERCENT_ADDED = 20;
-    private final int SPAWN_PERCENT_ADDED = 20;
+    private static final int STRENGHT_PERCENT_ADDED = 20;
+    private static final int VITALITY_PERCENT_ADDED = 20;
+    private static final int AGILITY_PERCENT_ADDED = 20;
+    private static final int SPAWN_PERCENT_ADDED = 20;
 
     private int strenght, vitality, agility, spawnPercent;
     private boolean locked;
@@ -27,25 +27,25 @@ public abstract class HEntity {
         return strenght;
     }
 
-    public void increaseStrenght() { this.strenght +=STRENGHT_PERCENT_ADDED; }
+    public void increaseStrenght() { this.strenght += STRENGHT_PERCENT_ADDED; }
 
     public int getVitality() {
         return vitality;
     }
 
-    public void increaseVitality() { this.strenght +=VITALITY_PERCENT_ADDED; }
+    public void increaseVitality() { this.strenght += VITALITY_PERCENT_ADDED; }
 
     public int getAgility() {
         return agility;
     }
 
-    public void increaseAgility() { this.strenght +=AGILITY_PERCENT_ADDED; }
+    public void increaseAgility() { this.strenght += AGILITY_PERCENT_ADDED; }
 
     public int getSpawnPercent() {
         return spawnPercent;
     }
 
-    public void increaseSpawnPercent() { this.strenght +=SPAWN_PERCENT_ADDED; }
+    public void increaseSpawnPercent() { this.strenght += SPAWN_PERCENT_ADDED; }
 
     public boolean isLocked() {
         return locked;

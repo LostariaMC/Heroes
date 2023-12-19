@@ -1,5 +1,11 @@
 package fr.worsewarn.heroes.manager;
 
+import fr.worsewarn.cosmox.api.languages.Language;
+import fr.worsewarn.cosmox.api.languages.LanguageManager;
+import fr.worsewarn.cosmox.tools.items.ItemBuilder;
+import fr.worsewarn.cosmox.tools.items.inventory.CosmoxInventory;
+import fr.worsewarn.cosmox.tools.items.inventory.CosmoxItem;
+import fr.worsewarn.cosmox.tools.items.inventory.actions.ClickAction;
 import fr.worsewarn.cosmox.tools.utils.MathsUtils;
 import fr.worsewarn.heroes.Main;
 import fr.worsewarn.cosmox.api.players.CosmoxPlayer;
@@ -19,6 +25,8 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
@@ -43,6 +51,7 @@ public class GameManager {
         this.pl = pl;
         this.pendingSpawns = new ArrayList<>();
         this.currentEntities = new ArrayList<>();
+        this.difficulty = 0;
 
         this.entities = Arrays.asList(
                 new PolarBear()
@@ -66,6 +75,9 @@ public class GameManager {
         villager.setCollidable(true);
         villager.setProfession(pl.getAPI().getUtils().getRandomElement(Arrays.asList(Villager.Profession.values())));
         villager.setVillagerType(pl.getAPI().getUtils().getRandomElement(Arrays.asList(Villager.Type.values())));
+
+        gameMap.getWorld().setTime(Long.valueOf(gameMap.getStr("worldTime")));
+        gameMap.getWorld().setGameRule(GameRule.DO_DAYLIGHT_CYCLE, gameMap.getStr("worldTime").equals("1"));
 
         for(Player all : Bukkit.getOnlinePlayers()) {
 
@@ -168,13 +180,106 @@ public class GameManager {
 
     public void death(Entity entity) {
 
-        currentEntities.remove(entity);
+        if(currentEntities.remove(entity)) {
+
+
+
+
+        }
 
         if(currentEntities.isEmpty()) {
 
             respawnPendingPlayers();
+
+            difficulty++;
         }
 
+    }
+
+    private void startRound() {
+
+        upgradeEntity();
+        if(difficulty%3 == 0) unlockEntity();
+        spawnMobs();
+
+
+    }
+
+    private void unlockEntity() {
+
+        HEntity entity = pl.getAPI().getUtils().getRandomElement(entities.stream().filter(HEntity::isLocked).toList());
+
+        if(entity != null) {
+
+            entity.unlock();
+        }
+
+    }
+
+    private void upgradeEntity() {
+
+        HEntity entity = pl.getAPI().getUtils().getRandomElement(entities.stream().filter(HEntity::isUnlocked).toList());
+
+        if(entity != null) {
+
+            int state = MathsUtils.random(5);
+
+            switch (state) {
+
+                case 1: entity.increaseAgility();
+                case 2: entity.increaseStrenght();
+                case 3: entity.increaseSpawnPercent();
+                case 4: entity.increaseVitality();
+            }
+        }
+    }
+
+    public void openUpgrades(Player player) {
+
+        HPlayer hPlayer = pl.getPlayer(player);
+        CosmoxPlayer cosmoxPlayer = pl.getAPI().getPlayer(player);
+        Language language = cosmoxPlayer.getRedisPlayer().getLanguage();
+
+        CosmoxInventory cosmoxInventory = new CosmoxInventory(pl.getAPI(), player, LanguageManager.getInstance().translate("heroes.inventory_upgrades_title", language), 9*6);
+
+        int i = 0;
+        for(PlayerAttribute playerAttribute : PlayerAttribute.values()) {
+
+            int actualLevel = hPlayer.getLevel(playerAttribute);
+            boolean maxLevel = actualLevel >= 15;
+            int cost = 10 + actualLevel;
+            boolean hasEnoughGolds = hPlayer.getGolds() >= cost;
+
+            cosmoxInventory.addCosmoxItem(new CosmoxItem(
+
+                    new ItemBuilder(playerAttribute.getMaterial())
+                            .setDisplayName("§f" + LanguageManager.getInstance().translate("heroes.inventory_upgrades_" + playerAttribute.getID(), language))
+                            .setLore(" ")
+                            .addLore(maxLevel ? "§c" + LanguageManager.getInstance().translate("heroes.inventory_upgrades_max_level", language) : hasEnoughGolds ? "§a" + LanguageManager.getInstance().translate("heroes.inventory_upgrades_buy", language) : "§c" + LanguageManager.getInstance().translate("heroes.inventory_upgrades_no_golds", language))
+
+                    , i).addClickAction((player1, clickType, inventoryAction) -> {
+
+                if(actualLevel >= 15) {
+
+                    player.sendMessage(pl.getGame().getPrefix() + "§c" + LanguageManager.getInstance().translate("heroes.inventory_upgrades_max_level_message", language));
+                    return;
+                }
+
+                if(!hasEnoughGolds) {
+
+                    player.sendMessage(pl.getGame().getPrefix() + "§c" + LanguageManager.getInstance().translate("heroes.inventory_upgrades_no_golds_message", language));
+                    return;
+                }
+
+                player.sendMessage(pl.getGame().getPrefix() + "§c" + LanguageManager.getInstance().translate("heroes.inventory_upgrades_success", language));
+                hPlayer.upgrade(playerAttribute);
+                openUpgrades(player);
+
+
+            }));
+
+            i++;
+        }
     }
 
 }

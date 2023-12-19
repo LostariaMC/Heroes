@@ -42,9 +42,9 @@ public class Main extends JavaPlugin {
 
                 /*Statistiques*/
                 Arrays.asList(
-                        new Statistic("Temps de jeu", GameVariables.TIME_PLAYED, true),
-                        new Statistic("Parties jouées", GameVariables.GAMES_PLAYED),
-                        new Statistic("Victoires", GameVariables.WIN)
+                        new Statistic("@lang/main.statistics_time_played/", GameVariables.TIME_PLAYED, true),
+                        new Statistic("@lang/main.statistics_games_played/", GameVariables.GAMES_PLAYED),
+                        new Statistic("@lang/main.statistics_win/", GameVariables.WIN)
 
                 ),
                 /*Achievements*/
@@ -53,8 +53,8 @@ public class Main extends JavaPlugin {
                 /*Description*/
                 Arrays.asList(
                         " ",
-                        "§7Défendez votre villageois au",
-                        "§7prix de votre vie"
+                        "@lang/heroes.game_description/"
+
                 ),
                 /*MapTemplate*/
                 Arrays.asList(
@@ -64,6 +64,9 @@ public class Main extends JavaPlugin {
                                         new MapLocation("authors", MapLocationType.STRING),
                                         new MapLocation("name", MapLocationType.STRING),
                                         new MapLocation("map", MapLocationType.CUBOID),
+
+                                        new MapLocation("worldTime", MapLocationType.LOCATION),
+                                        new MapLocation("dayCycle", MapLocationType.LOCATION), //boolean 0 ou 1
 
                                         new MapLocation("spawn", MapLocationType.LOCATION),
                                         new MapLocation("villager", MapLocationType.LOCATION),
@@ -79,7 +82,7 @@ public class Main extends JavaPlugin {
                 .addDefaultItem(new DefaultItemSlot("arrow", new ItemBuilder(Material.ARROW).setDisplayName("§fFlèches").build(), 35))
 
                 .setGameAuthor("Worsewarn")
-                .setTags("Coopération, Creeper Attack")
+                .setTags("@lang/heroes.game_tags/")
                 .setScoreboardOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER)
 
                 ;
@@ -103,6 +106,7 @@ public class Main extends JavaPlugin {
         pluginManager.registerEvents(new InventoryClick(this), this);
         pluginManager.registerEvents(new PlayerDropItem(this), this);
         pluginManager.registerEvents(new PlayerInteract(this), this);
+        pluginManager.registerEvents(new PlayerInteractEntity(this), this);
         pluginManager.registerEvents(new PlayerJoinGame(this), this);
         pluginManager.registerEvents(new PlayerJoinTeam(this), this);
         pluginManager.registerEvents(new PlayerMove(this), this);
