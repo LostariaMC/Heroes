@@ -1,5 +1,8 @@
 package fr.worsewarn.heroes.events;
 
+import fr.worsewarn.cosmox.api.players.CosmoxPlayer;
+import fr.worsewarn.cosmox.api.players.WrappedPlayer;
+import fr.worsewarn.cosmox.game.GameVariables;
 import fr.worsewarn.cosmox.game.teams.Team;
 import fr.worsewarn.heroes.Main;
 import fr.worsewarn.cosmox.game.events.PlayerJoinTeamEvent;
@@ -22,10 +25,12 @@ public class PlayerJoinTeam implements Listener {
 
         Player player = event.getPlayer();
         HPlayer hPlayer = pl.getPlayer(player);
+        CosmoxPlayer cosmoxPlayer = WrappedPlayer.of(player).toCosmox();
 
         if(event.getTeam().equals(Team.NO_TEAM)) {
 
             pl.getManager().addPlayerToPendingSpawns(player.getUniqueId());
+            cosmoxPlayer.setStatistic(GameVariables.GAMES_PLAYED, 1);
             return;
         }
 

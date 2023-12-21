@@ -16,6 +16,8 @@ public class EntityDeath implements Listener {
     @EventHandler
     public void EntityDeathEvent(EntityDeathEvent event) {
 
+        event.setDroppedExp(0);
+        event.getDrops().clear();
         pl.getManager().death(event.getEntity());
     }
 }

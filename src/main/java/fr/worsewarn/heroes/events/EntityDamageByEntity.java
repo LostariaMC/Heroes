@@ -3,6 +3,7 @@ package fr.worsewarn.heroes.events;
 import fr.worsewarn.cosmox.tools.utils.MathsUtils;
 import fr.worsewarn.heroes.Main;
 import fr.worsewarn.heroes.manager.HPlayer;
+import fr.worsewarn.heroes.manager.PlayerAttribute;
 import jodd.util.MathUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,7 +25,7 @@ public class EntityDamageByEntity implements Listener {
 
             HPlayer hPlayer = pl.getPlayer(player);
 
-            event.setDamage(event.getDamage() - (MathsUtils.getNumberByPercent(event.getDamage(), hPlayer.getArmor())));
+            event.setDamage(event.getDamage() - (MathsUtils.getNumberByPercent(event.getDamage(), hPlayer.getAttributeValue(PlayerAttribute.ARMOR))));
 
             if(player.getHealth() - event.getFinalDamage() <= 0) {
                 hPlayer.kill();

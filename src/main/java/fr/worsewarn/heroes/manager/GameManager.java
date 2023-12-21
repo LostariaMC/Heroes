@@ -2,36 +2,32 @@ package fr.worsewarn.heroes.manager;
 
 import fr.worsewarn.cosmox.api.languages.Language;
 import fr.worsewarn.cosmox.api.languages.LanguageManager;
+import fr.worsewarn.cosmox.api.players.WrappedPlayer;
+import fr.worsewarn.cosmox.game.Phase;
+import fr.worsewarn.cosmox.tools.Utils;
+import fr.worsewarn.cosmox.tools.chat.MessageBuilder;
 import fr.worsewarn.cosmox.tools.items.ItemBuilder;
 import fr.worsewarn.cosmox.tools.items.inventory.CosmoxInventory;
 import fr.worsewarn.cosmox.tools.items.inventory.CosmoxItem;
-import fr.worsewarn.cosmox.tools.items.inventory.actions.ClickAction;
 import fr.worsewarn.cosmox.tools.utils.MathsUtils;
 import fr.worsewarn.heroes.Main;
 import fr.worsewarn.cosmox.api.players.CosmoxPlayer;
 import fr.worsewarn.cosmox.api.scoreboard.CosmoxScoreboard;
 import fr.worsewarn.cosmox.game.GameVariables;
-import fr.worsewarn.cosmox.game.Phase;
 import fr.worsewarn.cosmox.game.teams.Team;
-import fr.worsewarn.cosmox.tools.chat.Messages;
-import fr.worsewarn.cosmox.tools.items.Items;
 import fr.worsewarn.cosmox.tools.map.GameMap;
-import fr.worsewarn.cosmox.tools.world.FireworkUtils;
 import fr.worsewarn.heroes.entities.HEntity;
 import fr.worsewarn.heroes.entities.TargetType;
 import fr.worsewarn.heroes.entities.entities.PolarBear;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class GameManager {
 
@@ -109,15 +105,18 @@ public class GameManager {
         if(p == null) return null;
 
         CosmoxScoreboard cosmoxScoreboard = new CosmoxScoreboard(p);
+        HPlayer hPlayer = WrappedPlayer.of(p).to(HPlayer.class);
 
-        cosmoxScoreboard.updateTitle("§f§lHEROES§7");
+        cosmoxScoreboard.updateTitle(ScoreboardFormat.TITLE.formatted(pl.getTask().getFormattedTimer()));
 
-        int i = -1;
-
-        cosmoxScoreboard.updateLine(i+=1, "§a ");
-
-
-        cosmoxScoreboard.updateLine(i+=1, "§e ");
+        cosmoxScoreboard.updateLine(0, "§a ");
+        cosmoxScoreboard.updateLine(1, new MessageBuilder(ScoreboardFormat.INFO, true).toString(p));
+        cosmoxScoreboard.updateLine(2, new MessageBuilder(ScoreboardFormat.INFO_ROUND, true).formatted(difficulty).toString(p));
+        cosmoxScoreboard.updateLine(3, new MessageBuilder(ScoreboardFormat.INFO_ENTITY_COUNT, true).formatted(currentEntities.size()).toString(p));
+        cosmoxScoreboard.updateLine(4, "§b ");
+        cosmoxScoreboard.updateLine(5, new MessageBuilder(ScoreboardFormat.GOLDS, true).formatted(hPlayer.getGolds()).toString(p));
+        cosmoxScoreboard.updateLine(6, "§c ");
+        cosmoxScoreboard.updateLine(7, "§d ");
 
         return cosmoxScoreboard;
     }
@@ -131,6 +130,11 @@ public class GameManager {
         if(pendingSpawns.contains(uuid)) return;
 
         pendingSpawns.add(uuid);
+
+        if(pendingSpawns.size() >= pl.getAPI().getPlayers().stream().filter(all -> all.getTeam().equals(Team.RANDOM)).count()) {
+
+            end(DefeatReason.PLAYERS_DEATH);
+        }
     }
 
     public void respawnPendingPlayers() {
@@ -156,7 +160,9 @@ public class GameManager {
 
                 for(HEntity entity : entities) {
 
-                    int chance = entity.getSpawnPercent() * playersCount;
+                    if(entity.isLocked()) continue;
+
+                    int chance = entity.getAttribute(EntityAttribute.SPAWN_PERCENT) * playersCount;
 
                     while(chance >= 0) {
 
@@ -178,25 +184,71 @@ public class GameManager {
         return currentEntities;
     }
 
+    public HEntity getEntity(Entity entity) {
+
+        EntityType entityType = entity.getType();
+
+        return entities.stream().filter(all -> all.getEntityType().equals(entityType)).findFirst().orElseGet(null);
+
+    }
+
+    public void end(DefeatReason reason) {
+
+        if(!pl.getAPI().getManager().getPhase().equals(Phase.END)) {
+
+            pl.getAPI().getManager().setPhase(Phase.END);
+            new MessageBuilder(pl.getGame().getPrefix() + "@lang/heroes.game_end_" + reason.name().toLowerCase(), true).broadcast();
+        }
+    }
+
     public void death(Entity entity) {
+
+        if(entity.getType().equals(EntityType.VILLAGER) && villager != null && villager.getEntityId() == entity.getEntityId()) {
+
+            end(DefeatReason.VILLAGER_DEATH);
+            return;
+        }
 
         if(currentEntities.remove(entity)) {
 
+            pl.getPlayers().forEach(all -> {
 
+                CosmoxPlayer cosmoxPlayer = WrappedPlayer.of(all).toCosmox();
+                HEntity entity1 = getEntity(entity);
 
+                if(entity1 != null) {
 
+                    all.changeGolds(Math.round(100F / (float)entity1.getAttribute(EntityAttribute.SPAWN_PERCENT)));
+                    cosmoxPlayer.getScoreboard().updateLine(3, new MessageBuilder(ScoreboardFormat.INFO_ENTITY_COUNT, true).formatted(currentEntities.size()).toString(cosmoxPlayer.getRedisPlayer().getLanguage()));
+
+                }
+
+            });
         }
 
         if(currentEntities.isEmpty()) {
 
-            respawnPendingPlayers();
+            int next_round = 8;
 
-            difficulty++;
+            respawnPendingPlayers();
+            new MessageBuilder("@lang/heroes.game_round_ended/", true).formatted(next_round).broadcast();
+
+            new BukkitRunnable() {
+
+                @Override
+                public void run() {
+
+                    difficulty++;
+                    startRound();
+                }
+            }.runTaskLater(pl, 20*8);
         }
 
     }
 
     private void startRound() {
+
+        Bukkit.getOnlinePlayers().forEach(all -> pl.getAPI().getPlayer(all).getScoreboard().updateLine(2, new MessageBuilder(ScoreboardFormat.INFO_ROUND, true).formatted(difficulty).toString(all)));
 
         upgradeEntity();
         if(difficulty%3 == 0) unlockEntity();
@@ -212,6 +264,7 @@ public class GameManager {
         if(entity != null) {
 
             entity.unlock();
+            new MessageBuilder(pl.getGame().getPrefix() + "@lang/heroes.entity_unlocked", true).formatted(entity.getName()).broadcast();
         }
 
     }
@@ -222,15 +275,10 @@ public class GameManager {
 
         if(entity != null) {
 
-            int state = MathsUtils.random(5);
+            EntityAttribute attribute = pl.getAPI().getUtils().getRandomElement(Arrays.stream(EntityAttribute.values()).toList());
+            entity.increaseAttribute(attribute);
 
-            switch (state) {
-
-                case 1: entity.increaseAgility();
-                case 2: entity.increaseStrenght();
-                case 3: entity.increaseSpawnPercent();
-                case 4: entity.increaseVitality();
-            }
+            new MessageBuilder(pl.getGame().getPrefix() + "@lang/heroes.entity_attribute_increased", true).formatted(entity.getName(), entity.getAttribute(attribute)-attribute.getModifier(), entity.getAttribute(attribute)).broadcast();
         }
     }
 
@@ -245,7 +293,7 @@ public class GameManager {
         int i = 0;
         for(PlayerAttribute playerAttribute : PlayerAttribute.values()) {
 
-            int actualLevel = hPlayer.getLevel(playerAttribute);
+            int actualLevel = hPlayer.getAttributeLevel(playerAttribute);
             boolean maxLevel = actualLevel >= 15;
             int cost = 10 + actualLevel;
             boolean hasEnoughGolds = hPlayer.getGolds() >= cost;
@@ -271,7 +319,7 @@ public class GameManager {
                     return;
                 }
 
-                player.sendMessage(pl.getGame().getPrefix() + "§c" + LanguageManager.getInstance().translate("heroes.inventory_upgrades_success", language));
+                player.sendMessage(pl.getGame().getPrefix() + "§a" + LanguageManager.getInstance().translate("heroes.inventory_upgrades_success", language));
                 hPlayer.upgrade(playerAttribute);
                 openUpgrades(player);
 

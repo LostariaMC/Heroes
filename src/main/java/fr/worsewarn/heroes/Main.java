@@ -1,6 +1,7 @@
 package fr.worsewarn.heroes;
 
 import fr.worsewarn.cosmox.API;
+import fr.worsewarn.cosmox.api.players.WrappedPlayer;
 import fr.worsewarn.cosmox.api.statistics.Statistic;
 import fr.worsewarn.cosmox.game.Game;
 import fr.worsewarn.cosmox.game.GameVariables;
@@ -44,7 +45,7 @@ public class Main extends JavaPlugin {
                 Arrays.asList(
                         new Statistic("@lang/main.statistics_time_played/", GameVariables.TIME_PLAYED, true),
                         new Statistic("@lang/main.statistics_games_played/", GameVariables.GAMES_PLAYED),
-                        new Statistic("@lang/main.statistics_win/", GameVariables.WIN)
+                        new Statistic("@lang/heroes.statistics_round_max/", GameVariables.CUSTOM_1).uploadOnlyIfSuperior()
 
                 ),
                 /*Achievements*/
@@ -77,9 +78,9 @@ public class Main extends JavaPlugin {
 
                 ))
 
-                .addDefaultItem(new DefaultItemSlot("sword", new ItemBuilder(Material.IRON_SWORD).setDisplayName("§fÉpée").build(), 0))
-                .addDefaultItem(new DefaultItemSlot("bow", new ItemBuilder(Material.BOW).setDisplayName("§fArc").build(), 1))
-                .addDefaultItem(new DefaultItemSlot("arrow", new ItemBuilder(Material.ARROW).setDisplayName("§fFlèches").build(), 35))
+                .addDefaultItem(new DefaultItemSlot("sword", new ItemBuilder(Material.IRON_SWORD).setDisplayName("§f@lang/heroes.item_sword/").build(), 0))
+                .addDefaultItem(new DefaultItemSlot("bow", new ItemBuilder(Material.BOW).setDisplayName("§f@lang/heroes.item_bow/").build(), 1))
+                .addDefaultItem(new DefaultItemSlot("arrow", new ItemBuilder(Material.ARROW).setDisplayName("§f@lang/heroes.item_arrows/").build(), 35))
 
                 .setGameAuthor("Worsewarn")
                 .setTags("@lang/heroes.game_tags/")
@@ -95,6 +96,18 @@ public class Main extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new GameStart(this), this);
 
+        WrappedPlayer.registerType(new WrappedPlayer.PlayerWrapper<>(HPlayer.class) {
+            @Override
+            public HPlayer unWrap(java.util.UUID uuid) {
+                return getPlayer(uuid);
+            }
+
+            @Override
+            public java.util.UUID wrap(HPlayer hPlayer) {
+                return hPlayer.getUUID();
+            }
+        });
+
     }
 
     public void registerListeners() {
@@ -104,6 +117,7 @@ public class Main extends JavaPlugin {
         pluginManager.registerEvents(new EntityDamage(this), this);
         pluginManager.registerEvents(new EntityDamageByEntity(this), this);
         pluginManager.registerEvents(new InventoryClick(this), this);
+        pluginManager.registerEvents(new PlayerChangeLanguage(this), this);
         pluginManager.registerEvents(new PlayerDropItem(this), this);
         pluginManager.registerEvents(new PlayerInteract(this), this);
         pluginManager.registerEvents(new PlayerInteractEntity(this), this);

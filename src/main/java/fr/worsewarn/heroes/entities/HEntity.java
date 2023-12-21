@@ -1,51 +1,52 @@
 package fr.worsewarn.heroes.entities;
 
+import fr.worsewarn.cosmox.tools.chat.MessageBuilder;
+import fr.worsewarn.heroes.manager.EntityAttribute;
 import net.minecraft.world.entity.Entity;
 import org.bukkit.Location;
+import org.bukkit.entity.EntityType;
+
+import java.util.Arrays;
+import java.util.HashMap;
 
 public abstract class HEntity {
 
-    private static final int STRENGHT_PERCENT_ADDED = 20;
-    private static final int VITALITY_PERCENT_ADDED = 20;
-    private static final int AGILITY_PERCENT_ADDED = 20;
-    private static final int SPAWN_PERCENT_ADDED = 20;
-
-    private int strenght, vitality, agility, spawnPercent;
+    private String name;
+    private EntityType entityType;
+    private HashMap<EntityAttribute, Integer> attributes;
     private boolean locked;
 
     private TargetType targetType;
 
     public abstract Entity spawn(Location location);
 
-    public HEntity(int spawnPercent, TargetType targetType) {
-        this.spawnPercent = spawnPercent;
+    public HEntity(String name, EntityType entityType, int spawnPercent, TargetType targetType) {
+        this.name = name;
+        this.entityType = entityType;
+        this.attributes = new HashMap<>();
+        Arrays.stream(EntityAttribute.values()).forEach(all -> attributes.put(all, 0));
+        attributes.put(EntityAttribute.SPAWN_PERCENT, spawnPercent);
         this.targetType = targetType;
         this.locked = true;
     }
 
-    public int getStrenght() {
-        return strenght;
+    public String getName() {
+        return name;
     }
 
-    public void increaseStrenght() { this.strenght += STRENGHT_PERCENT_ADDED; }
-
-    public int getVitality() {
-        return vitality;
+    public EntityType getEntityType() {
+        return entityType;
     }
 
-    public void increaseVitality() { this.strenght += VITALITY_PERCENT_ADDED; }
+    public void increaseAttribute(EntityAttribute attribute) {
 
-    public int getAgility() {
-        return agility;
+        attributes.put(attribute, getAttribute(attribute) + attribute.getModifier());
+
     }
 
-    public void increaseAgility() { this.strenght += AGILITY_PERCENT_ADDED; }
-
-    public int getSpawnPercent() {
-        return spawnPercent;
+    public int getAttribute(EntityAttribute attribute) {
+        return attributes.getOrDefault(attribute, 0);
     }
-
-    public void increaseSpawnPercent() { this.strenght += SPAWN_PERCENT_ADDED; }
 
     public boolean isLocked() {
         return locked;

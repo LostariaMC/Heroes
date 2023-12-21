@@ -1,11 +1,11 @@
 package fr.worsewarn.heroes.manager;
 
 import fr.worsewarn.cosmox.api.players.CosmoxPlayer;
+import fr.worsewarn.cosmox.api.players.WrappedPlayer;
 import fr.worsewarn.cosmox.game.teams.Team;
+import fr.worsewarn.cosmox.tools.chat.MessageBuilder;
 import fr.worsewarn.cosmox.tools.items.ItemBuilder;
 import fr.worsewarn.heroes.Main;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -17,7 +17,7 @@ import org.bukkit.inventory.PlayerInventory;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class HPlayer {
+public class HPlayer extends WrappedPlayer {
 
     private Main pl;
 
@@ -29,6 +29,8 @@ public class HPlayer {
     private HashMap<PlayerAttribute, Integer> attributes;
 
     public HPlayer(Main pl, UUID uuid) {
+        super(uuid);
+
         this.uuid = uuid;
         this.cosmoxPlayer = pl.getAPI().getPlayer(uuid);
         this.attributes = new HashMap<>();
@@ -88,13 +90,14 @@ public class HPlayer {
 
         player.setGameMode(GameMode.SPECTATOR);
         player.getInventory().clear();
+        new MessageBuilder(pl.getGame().getPrefix() + "§c@lang/heroes.game_player_death/", true).sendMessage(player);
     }
 
     public int getGolds() {
         return golds;
     }
 
-    public void addGolds(int amount) {
+    public void changeGolds(int amount) {
 
         this.golds+=amount;
 
@@ -102,17 +105,23 @@ public class HPlayer {
 
         if(player == null || !player.isOnline()) return;
 
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(""));
+        //player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(""));
+        cosmoxPlayer.getScoreboard().updateLine(5, new MessageBuilder(ScoreboardFormat.GOLDS, true).formatted(golds).toString(cosmoxPlayer.getRedisPlayer().getLanguage()));
     }
 
-    public int getLevel(PlayerAttribute attribute) {
+    public int getAttributeLevel(PlayerAttribute attribute) {
 
         return attributes.get(attribute);
     }
 
+    public float getAttributeValue(PlayerAttribute attribute) {
+
+        return attributes.get(attribute) * attribute.getValue();
+    }
+
     public void upgrade(PlayerAttribute attribute) {
 
-        int currentLevel = getLevel(attribute);
+        int currentLevel = getAttributeLevel(attribute);
 
         updateExtraAttributes();
 
@@ -127,17 +136,17 @@ public class HPlayer {
 
         PlayerInventory playerInventory = player.getInventory();
 
-        if(getLevel(PlayerAttribute.SWORD) >= 10) {
+        if(getAttributeLevel(PlayerAttribute.SWORD) >= 10) {
 
             //Add enchantment on sword
         }
 
-        if(getLevel(PlayerAttribute.CROSSBOW) >= 10) {
+        if(getAttributeLevel(PlayerAttribute.CROSSBOW) >= 10) {
 
             //Add enchantment on crossbow
         }
 
-        if(getLevel(PlayerAttribute.ARMOR) >= 10) {
+        if(getAttributeLevel(PlayerAttribute.ARMOR) >= 10) {
 
             player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(30);
         }
