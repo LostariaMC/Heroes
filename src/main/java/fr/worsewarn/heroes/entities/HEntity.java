@@ -1,8 +1,8 @@
 package fr.worsewarn.heroes.entities;
 
-import fr.worsewarn.cosmox.tools.chat.MessageBuilder;
 import fr.worsewarn.heroes.manager.EntityAttribute;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.PolarBear;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 

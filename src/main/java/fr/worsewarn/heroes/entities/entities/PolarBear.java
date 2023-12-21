@@ -12,14 +12,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_20_R1.CraftWorld;
-import org.bukkit.entity.EntityType;
 
 import java.util.function.Predicate;
 
 public class PolarBear extends HEntity {
 
     public PolarBear() {
-        super(EntityType.POLAR_BEAR, 50, TargetType.VILLAGER);
+        super("@lang/main.entity.polar_bear/", org.bukkit.entity.EntityType.POLAR_BEAR, 50, TargetType.VILLAGER);
     }
 
     @Override
