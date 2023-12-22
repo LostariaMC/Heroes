@@ -55,7 +55,7 @@ public class GameTask {
                         cosmoxPlayer.addStatistic(GameVariables.TIME_PLAYED, 1);
                     }
 
-                    if(pl.getManager().getPendingSpawns().contains(all.getUniqueId())) all.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(new MessageBuilder("§c@lang/heroes.game_player_death/", true).toString(cosmoxPlayer.getRedisPlayer().getLanguage())));
+                    if(pl.getManager().getPendingSpawns().contains(all.getUniqueId())) all.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(new MessageBuilder("§c@lang/heroes.game_player_death_waiting/", true).toString(cosmoxPlayer.getRedisPlayer().getLanguage())));
 
                 }
             }

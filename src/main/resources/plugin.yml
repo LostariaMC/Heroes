@@ -2,3 +2,4 @@ name: Heroes
 version: 0.1
 author: Worsewarn
 main: fr.worsewarn.heroes.Main
+api-version: 1.19

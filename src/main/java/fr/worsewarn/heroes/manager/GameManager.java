@@ -19,12 +19,10 @@ import fr.worsewarn.cosmox.tools.map.GameMap;
 import fr.worsewarn.heroes.entities.HEntity;
 import fr.worsewarn.heroes.entities.TargetType;
 import fr.worsewarn.heroes.entities.entities.PolarBear;
+import fr.worsewarn.heroes.entities.entities.Zombie;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
+import org.bukkit.entity.*;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
@@ -50,7 +48,8 @@ public class GameManager {
         this.difficulty = 0;
 
         this.entities = Arrays.asList(
-                new PolarBear()
+                new PolarBear(),
+                new Zombie()
         );
     }
 
@@ -95,8 +94,10 @@ public class GameManager {
             }
         }
 
+        new MessageBuilder(pl.getGame().getPrefix() + "§f@lang/heroes.game_description_ingame/", true).broadcast();
         pl.registerListeners();
         pl.getTask().run();
+        pl.getAPI().getManager().setPhase(Phase.GAME);
 
     }
 
@@ -131,7 +132,7 @@ public class GameManager {
 
         pendingSpawns.add(uuid);
 
-        if(pendingSpawns.size() >= pl.getAPI().getPlayers().stream().filter(all -> all.getTeam().equals(Team.RANDOM)).count()) {
+        if(pendingSpawns.size() >= pl.getAPI().getPlayers().stream().filter(all -> all.getTeam().equals(Team.NO_TEAM)).count()) {
 
             end(DefeatReason.PLAYERS_DEATH);
         }
@@ -168,7 +169,15 @@ public class GameManager {
 
                         if(MathsUtils.getRandomByPercent(chance)) {
 
-                            currentEntities.add(entity.spawn(spawn).getBukkitEntity());
+                            Entity entity1 = entity.spawn(spawn).getBukkitEntity();
+                            LivingEntity livingEntity = ((LivingEntity) entity1);
+                            livingEntity.setRemoveWhenFarAway(false);
+                            livingEntity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(255);
+                            livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(MathsUtils.getNumberByPercent(livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue(), 100 + entity.getAttribute(EntityAttribute.VITALITY)));
+                            livingEntity.setHealth(livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
+                            livingEntity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(MathsUtils.getNumberByPercent(livingEntity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue(), 100 + entity.getAttribute(EntityAttribute.AGILITY)));
+
+                            currentEntities.add(entity1);
                         }
 
                         chance-=100;
@@ -178,6 +187,15 @@ public class GameManager {
 
             }
         }
+
+        pl.getPlayers().forEach(all -> {
+
+            CosmoxPlayer cosmoxPlayer = WrappedPlayer.of(all).toCosmox();
+
+            cosmoxPlayer.getScoreboard().updateLine(3, new MessageBuilder(ScoreboardFormat.INFO_ENTITY_COUNT, true).formatted(currentEntities.size()).toString(cosmoxPlayer.getRedisPlayer().getLanguage()));
+
+
+        });
     }
 
     public List<Entity> getCurrentEntities() {
@@ -188,7 +206,7 @@ public class GameManager {
 
         EntityType entityType = entity.getType();
 
-        return entities.stream().filter(all -> all.getEntityType().equals(entityType)).findFirst().orElseGet(null);
+        return entities.stream().filter(all -> all.getEntityType().equals(entityType)).findFirst().orElse(null);
 
     }
 
@@ -197,7 +215,7 @@ public class GameManager {
         if(!pl.getAPI().getManager().getPhase().equals(Phase.END)) {
 
             pl.getAPI().getManager().setPhase(Phase.END);
-            new MessageBuilder(pl.getGame().getPrefix() + "@lang/heroes.game_end_" + reason.name().toLowerCase(), true).broadcast();
+            new MessageBuilder(pl.getGame().getPrefix() + "@lang/heroes.game_end_" + reason.name().toLowerCase() + "/", true).broadcast();
         }
     }
 
@@ -231,7 +249,7 @@ public class GameManager {
             int next_round = 8;
 
             respawnPendingPlayers();
-            new MessageBuilder("@lang/heroes.game_round_ended/", true).formatted(next_round).broadcast();
+            new MessageBuilder(pl.getGame().getPrefix() + "§e@lang/heroes.game_round_ended/", true).formatted(next_round).broadcast();
 
             new BukkitRunnable() {
 
@@ -264,7 +282,7 @@ public class GameManager {
         if(entity != null) {
 
             entity.unlock();
-            new MessageBuilder(pl.getGame().getPrefix() + "@lang/heroes.entity_unlocked", true).formatted(entity.getName()).broadcast();
+            Bukkit.getOnlinePlayers().forEach(all -> new MessageBuilder(new MessageBuilder(pl.getGame().getPrefix() + "@lang/heroes.entity_unlocked/", true).formatted(entity.getName()).toString(WrappedPlayer.of(all).toCosmox().getRedisPlayer().getLanguage()), true).sendMessage(all));
         }
 
     }
@@ -278,7 +296,7 @@ public class GameManager {
             EntityAttribute attribute = pl.getAPI().getUtils().getRandomElement(Arrays.stream(EntityAttribute.values()).toList());
             entity.increaseAttribute(attribute);
 
-            new MessageBuilder(pl.getGame().getPrefix() + "@lang/heroes.entity_attribute_increased", true).formatted(entity.getName(), entity.getAttribute(attribute)-attribute.getModifier(), entity.getAttribute(attribute)).broadcast();
+            new MessageBuilder(pl.getGame().getPrefix() + "@lang/heroes.entity_attribute_increased/", true).formatted(entity.getName(), attribute.getName(), entity.getAttribute(attribute)-attribute.getModifier(), entity.getAttribute(attribute)).broadcast();
         }
     }
 
@@ -288,7 +306,7 @@ public class GameManager {
         CosmoxPlayer cosmoxPlayer = pl.getAPI().getPlayer(player);
         Language language = cosmoxPlayer.getRedisPlayer().getLanguage();
 
-        CosmoxInventory cosmoxInventory = new CosmoxInventory(pl.getAPI(), player, LanguageManager.getInstance().translate("heroes.inventory_upgrades_title", language), 9*6);
+        CosmoxInventory cosmoxInventory = new CosmoxInventory(pl.getAPI(), player, LanguageManager.getInstance().translate("heroes.inventory_upgrades_title", language), 9*1);
 
         int i = 0;
         for(PlayerAttribute playerAttribute : PlayerAttribute.values()) {
@@ -321,6 +339,7 @@ public class GameManager {
 
                 player.sendMessage(pl.getGame().getPrefix() + "§a" + LanguageManager.getInstance().translate("heroes.inventory_upgrades_success", language));
                 hPlayer.upgrade(playerAttribute);
+                hPlayer.changeGolds(cost);
                 openUpgrades(player);
 
 
@@ -328,6 +347,8 @@ public class GameManager {
 
             i++;
         }
+
+        player.openInventory(cosmoxInventory.getInventory());
     }
 
 }

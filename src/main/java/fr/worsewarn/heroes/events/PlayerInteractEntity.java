@@ -1,6 +1,7 @@
 package fr.worsewarn.heroes.events;
 
 import fr.worsewarn.heroes.Main;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,6 +21,7 @@ public class PlayerInteractEntity implements Listener {
         if(pl.getAPI().getManager().getPhase().getState() == 1 && event.getRightClicked() instanceof Villager villager) {
 
             pl.getManager().openUpgrades(event.getPlayer());
+            event.setCancelled(true);
 
         }
     }

@@ -3,6 +3,7 @@ package fr.worsewarn.heroes.manager;
 import fr.worsewarn.cosmox.api.players.CosmoxPlayer;
 import fr.worsewarn.cosmox.api.players.WrappedPlayer;
 import fr.worsewarn.cosmox.game.teams.Team;
+import fr.worsewarn.cosmox.tools.Utils;
 import fr.worsewarn.cosmox.tools.chat.MessageBuilder;
 import fr.worsewarn.cosmox.tools.items.ItemBuilder;
 import fr.worsewarn.heroes.Main;
@@ -12,7 +13,11 @@ import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -28,12 +33,16 @@ public class HPlayer extends WrappedPlayer {
 
     private HashMap<PlayerAttribute, Integer> attributes;
 
+    private HashMap<PlayerAttribute, BukkitTask> tasks;
+
     public HPlayer(Main pl, UUID uuid) {
         super(uuid);
 
+        this.pl = pl;
         this.uuid = uuid;
         this.cosmoxPlayer = pl.getAPI().getPlayer(uuid);
         this.attributes = new HashMap<>();
+        this.tasks = new HashMap<>();
 
         for(PlayerAttribute attribute : PlayerAttribute.values()) {
             attributes.put(attribute, 0);
@@ -55,6 +64,7 @@ public class HPlayer extends WrappedPlayer {
         equip();
         updateExtraAttributes();
         player.setFallDistance(0);
+        player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
         player.teleport(pl.getManager().getMapCenter());
         player.setGameMode(GameMode.ADVENTURE);
 
@@ -77,10 +87,15 @@ public class HPlayer extends WrappedPlayer {
         cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.IRON_SWORD).setUnbreakable(true).build(), "sword");
         cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.BOW).addEnchant(Enchantment.ARROW_INFINITE, 1).setGlow(false).setUnbreakable(true).build(), "bow");
         cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.ARROW).build(), "arrow");
+        cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.SPLASH_POTION).setPotionColor(PotionEffectType.HEAL.getColor()).setPotionEffect(new PotionEffect(PotionEffectType.HEAL, 0, 0)).build(), "heal");
 
     }
 
     public void kill() {
+
+        tasks.values().forEach(all -> {
+            if(all != null) all.cancel();
+        });
 
         pl.getManager().addPlayerToPendingSpawns(uuid);
 
@@ -134,11 +149,14 @@ public class HPlayer extends WrappedPlayer {
 
         if(player == null || !player.isOnline()) return;
 
-        PlayerInventory playerInventory = player.getInventory();
-
         if(getAttributeLevel(PlayerAttribute.SWORD) >= 10) {
 
-            //Add enchantment on sword
+            ItemStack itemStack = Utils.findFirstItem(Material.IRON_SWORD, player);
+
+            if(itemStack != null) {
+                itemStack.removeEnchantment(Enchantment.SWEEPING_EDGE);
+                itemStack.addEnchantment(Enchantment.SWEEPING_EDGE, 4);
+            }
         }
 
         if(getAttributeLevel(PlayerAttribute.CROSSBOW) >= 10) {
@@ -155,4 +173,7 @@ public class HPlayer extends WrappedPlayer {
 
     }
 
+    public HashMap<PlayerAttribute, BukkitTask> getTasks() {
+        return tasks;
+    }
 }

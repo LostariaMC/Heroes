@@ -8,6 +8,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.bukkit.Location;
@@ -43,12 +44,41 @@ public class PolarBear extends HEntity {
             super.registerGoals();
             this.goalSelector.addGoal(0, new FloatGoal(this));
             this.goalSelector.addGoal(1, new PolarBearMeleeAttackGoal());
-            this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.25));
             this.goalSelector.addGoal(5, new RandomStrollGoal(this, 1.0));
-            this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
+            this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Villager.class, 6.0F));
             this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
-            this.targetSelector.addGoal(4, new NearestAttackableTargetGoal(this, Player.class, 10, true, true, (Predicate)null));
-            this.targetSelector.addGoal(5, new ResetUniversalAngerTargetGoal(this, false));
+            this.targetSelector.addGoal(4, new NearestAttackableTargetGoal(this, Villager.class, true));
+            this.goalSelector.addGoal(8, new PassiveDefendGoal(this, Player.class));
+
+        }
+
+        class PassiveDefendGoal extends Goal {
+            private final LivingEntity entity;
+            private final Class<?> attackerClass;
+
+            public PassiveDefendGoal(LivingEntity entity, Class<?> attackerClass) {
+                this.entity = entity;
+                this.attackerClass = attackerClass;
+            }
+
+            @Override
+            public boolean canUse() {
+                return true;  // Toujours activé
+            }
+
+            @Override
+            public void start() {
+                // Vérifier si l'entité est attaquée par un joueur
+                if (this.entity.getLastHurtMob() instanceof Player) {
+                    this.entity.setLastHurtByMob(null);  // Ne pas riposter, annuler la cible actuelle
+                }
+            }
+
+            @Override
+            public void tick() {
+                // Peut implémenter des actions supplémentaires si nécessaire lors de l'attaque
+            }
+
         }
 
         class PolarBearMeleeAttackGoal extends MeleeAttackGoal {

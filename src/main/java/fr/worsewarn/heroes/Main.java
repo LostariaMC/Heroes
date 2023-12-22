@@ -20,8 +20,10 @@ import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Team;
 
 import java.util.*;
@@ -66,8 +68,8 @@ public class Main extends JavaPlugin {
                                         new MapLocation("name", MapLocationType.STRING),
                                         new MapLocation("map", MapLocationType.CUBOID),
 
-                                        new MapLocation("worldTime", MapLocationType.LOCATION),
-                                        new MapLocation("dayCycle", MapLocationType.LOCATION), //boolean 0 ou 1
+                                        new MapLocation("worldTime", MapLocationType.STRING),
+                                        new MapLocation("dayCycle", MapLocationType.STRING), //boolean 0 ou 1
 
                                         new MapLocation("spawn", MapLocationType.LOCATION),
                                         new MapLocation("villager", MapLocationType.LOCATION),
@@ -81,11 +83,13 @@ public class Main extends JavaPlugin {
                 .addDefaultItem(new DefaultItemSlot("sword", new ItemBuilder(Material.IRON_SWORD).setDisplayName("§f@lang/heroes.item_sword/").build(), 0))
                 .addDefaultItem(new DefaultItemSlot("bow", new ItemBuilder(Material.BOW).setDisplayName("§f@lang/heroes.item_bow/").build(), 1))
                 .addDefaultItem(new DefaultItemSlot("arrow", new ItemBuilder(Material.ARROW).setDisplayName("§f@lang/heroes.item_arrows/").build(), 35))
+                .addDefaultItem(new DefaultItemSlot("heal", new ItemBuilder(Material.SPLASH_POTION).setPotionColor(PotionEffectType.HEAL.getColor()).setDisplayName("§f@lang/heroes.item_potion/").build(), 2))
 
                 .setGameAuthor("Worsewarn")
                 .setTags("@lang/heroes.game_tags/")
                 .setScoreboardOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER)
-
+                .setPreparationTime(15)
+                .hideInHub()
                 ;
 
         api.registerNewGame(game);
@@ -116,7 +120,10 @@ public class Main extends JavaPlugin {
 
         pluginManager.registerEvents(new EntityDamage(this), this);
         pluginManager.registerEvents(new EntityDamageByEntity(this), this);
+        pluginManager.registerEvents(new EntityDeath(this), this);
         pluginManager.registerEvents(new InventoryClick(this), this);
+        pluginManager.registerEvents(new GamePreparationOver(this), this);
+        pluginManager.registerEvents(new PlayerDeath(this), this);
         pluginManager.registerEvents(new PlayerChangeLanguage(this), this);
         pluginManager.registerEvents(new PlayerDropItem(this), this);
         pluginManager.registerEvents(new PlayerInteract(this), this);
@@ -125,6 +132,8 @@ public class Main extends JavaPlugin {
         pluginManager.registerEvents(new PlayerJoinTeam(this), this);
         pluginManager.registerEvents(new PlayerMove(this), this);
         pluginManager.registerEvents(new PlayerQuit(this), this);
+        pluginManager.registerEvents(new PotionSplash(this), this);
+        pluginManager.registerEvents(new ProjectileLaunch(this), this);
 
     }
 
