@@ -11,6 +11,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -84,10 +87,10 @@ public class HPlayer extends WrappedPlayer {
         playerInventory.setLeggings(new ItemBuilder(Material.IRON_LEGGINGS).addEnchant(Enchantment.BINDING_CURSE, 1).setGlow(false).setUnbreakable(true).build());
         playerInventory.setBoots(new ItemBuilder(Material.IRON_BOOTS).addEnchant(Enchantment.BINDING_CURSE, 1).setGlow(false).setUnbreakable(true).build());
 
-        cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.IRON_SWORD).setUnbreakable(true).build(), "sword");
-        cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.BOW).addEnchant(Enchantment.ARROW_INFINITE, 1).setGlow(false).setUnbreakable(true).build(), "bow");
-        cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.ARROW).build(), "arrow");
-        cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.SPLASH_POTION).setPotionColor(PotionEffectType.HEAL.getColor()).setPotionEffect(new PotionEffect(PotionEffectType.HEAL, 0, 0)).build(), "heal");
+        cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.IRON_SWORD).setUnbreakable(true).build(), "heroes_sword", true);
+        cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.BOW).addEnchant(Enchantment.ARROW_INFINITE, 1).setGlow(false).setUnbreakable(true).build(), "heroes_bow", true);
+        cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.ARROW).build(), "heroes_arrow", true);
+        cosmoxPlayer.getDefaultItemManager().setItemInventoryCustomSlot(new ItemBuilder(Material.SPLASH_POTION).setPotionColor(PotionEffectType.HEAL.getColor()).setPotionEffect(new PotionEffect(PotionEffectType.HEAL, 0, 0)).setDisplayName(new MessageBuilder("§f@lang/heroes.item_heal_potion/", true).toString(player)).build(), "heroes_heal", true);
 
     }
 
@@ -131,16 +134,21 @@ public class HPlayer extends WrappedPlayer {
 
     public float getAttributeValue(PlayerAttribute attribute) {
 
-        return attributes.get(attribute) * attribute.getValue();
+        return getAttributeValue(attribute, attributes.get(attribute));
+    }
+
+    public float getAttributeValue(PlayerAttribute attribute, int level) {
+
+        return attribute.getValue() * level;
     }
 
     public void upgrade(PlayerAttribute attribute) {
 
         int currentLevel = getAttributeLevel(attribute);
 
-        updateExtraAttributes();
-
         attributes.put(attribute, currentLevel+1);
+
+        updateExtraAttributes();
     }
 
     public void updateExtraAttributes() {
@@ -155,14 +163,14 @@ public class HPlayer extends WrappedPlayer {
 
             if(itemStack != null) {
                 itemStack.removeEnchantment(Enchantment.SWEEPING_EDGE);
-                itemStack.addEnchantment(Enchantment.SWEEPING_EDGE, 4);
+                itemStack.addUnsafeEnchantment(Enchantment.SWEEPING_EDGE, 4);
             }
         }
 
-        if(getAttributeLevel(PlayerAttribute.CROSSBOW) >= 10) {
+        //if(getAttributeLevel(PlayerAttribute.CROSSBOW) >= 10) {
 
             //Add enchantment on crossbow
-        }
+        //}
 
         if(getAttributeLevel(PlayerAttribute.ARMOR) >= 10) {
 

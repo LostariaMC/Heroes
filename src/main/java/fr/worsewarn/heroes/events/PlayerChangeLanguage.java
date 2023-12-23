@@ -1,5 +1,7 @@
 package fr.worsewarn.heroes.events;
 
+import fr.worsewarn.cosmox.api.players.CosmoxPlayer;
+import fr.worsewarn.cosmox.api.players.WrappedPlayer;
 import fr.worsewarn.cosmox.game.events.PlayerChangeLanguageEvent;
 import fr.worsewarn.heroes.Main;
 import org.bukkit.entity.Player;
@@ -18,7 +20,10 @@ public class PlayerChangeLanguage implements Listener {
     public void PlayerChangeLanguageEvent(PlayerChangeLanguageEvent event) {
 
         Player player = event.getPlayer();
+        CosmoxPlayer cosmoxPlayer = WrappedPlayer.of(player).toCosmox();
 
-        pl.getAPI().getPlayer(player).setScoreboard(pl.getManager().getScoreboard(player));
+        cosmoxPlayer.setScoreboard(pl.getManager().getScoreboard(player));
+        pl.getManager().removePlayerBossBar(player);
+        pl.getManager().addPlayerBossBar(player, cosmoxPlayer.getRedisPlayer().getLanguage());
     }
 }

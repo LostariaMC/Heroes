@@ -1,5 +1,6 @@
 package fr.worsewarn.heroes.manager;
 
+import fr.worsewarn.cosmox.api.languages.Language;
 import fr.worsewarn.cosmox.tools.chat.MessageBuilder;
 import fr.worsewarn.heroes.Main;
 import fr.worsewarn.cosmox.api.players.CosmoxPlayer;
@@ -15,6 +16,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Particle;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -45,6 +49,7 @@ public class GameTask {
 
                 for(Player all : Bukkit.getOnlinePlayers()) {
 
+                    HPlayer hPlayer = pl.getPlayer(all);
                     CosmoxPlayer cosmoxPlayer = pl.getAPI().getPlayer(all);
                     CosmoxScoreboard cosmoxScoreboard = cosmoxPlayer.getScoreboard();
 
@@ -56,7 +61,16 @@ public class GameTask {
                     }
 
                     if(pl.getManager().getPendingSpawns().contains(all.getUniqueId())) all.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(new MessageBuilder("§c@lang/heroes.game_player_death_waiting/", true).toString(cosmoxPlayer.getRedisPlayer().getLanguage())));
+                }
 
+                double villagerHealth = pl.getManager().getVillager().getHealth();
+                double villagerMaxHealth = pl.getManager().getVillager().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
+                double progress = villagerHealth / (float)villagerMaxHealth;
+                BarColor barColor = progress > 0.66 ? BarColor.GREEN : progress > 0.33 ? BarColor.YELLOW : BarColor.RED;
+                for(BossBar bossBar : pl.getManager().getBossBars()) {
+
+                    bossBar.setProgress(progress);
+                    bossBar.setColor(barColor);
                 }
             }
         }.runTaskTimer(pl, 20, 20);

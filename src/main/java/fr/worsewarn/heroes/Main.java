@@ -80,10 +80,10 @@ public class Main extends JavaPlugin {
 
                 ))
 
-                .addDefaultItem(new DefaultItemSlot("sword", new ItemBuilder(Material.IRON_SWORD).setDisplayName("§f@lang/heroes.item_sword/").build(), 0))
-                .addDefaultItem(new DefaultItemSlot("bow", new ItemBuilder(Material.BOW).setDisplayName("§f@lang/heroes.item_bow/").build(), 1))
-                .addDefaultItem(new DefaultItemSlot("arrow", new ItemBuilder(Material.ARROW).setDisplayName("§f@lang/heroes.item_arrows/").build(), 35))
-                .addDefaultItem(new DefaultItemSlot("heal", new ItemBuilder(Material.SPLASH_POTION).setPotionColor(PotionEffectType.HEAL.getColor()).setDisplayName("§f@lang/heroes.item_potion/").build(), 2))
+                .addDefaultItem(new DefaultItemSlot("heroes_sword", new ItemBuilder(Material.IRON_SWORD).setDisplayName("§f@lang/heroes.item_sword/").build(), 0))
+                .addDefaultItem(new DefaultItemSlot("heroes_bow", new ItemBuilder(Material.BOW).setDisplayName("§f@lang/heroes.item_bow/").build(), 1))
+                .addDefaultItem(new DefaultItemSlot("heroes_arrow", new ItemBuilder(Material.ARROW).setDisplayName("§f@lang/heroes.item_arrows/").build(), 35))
+                .addDefaultItem(new DefaultItemSlot("heroes_heal", new ItemBuilder(Material.SPLASH_POTION).setPotionColor(PotionEffectType.HEAL.getColor()).setDisplayName("§f@lang/heroes.item_potion/").build(), 2))
 
                 .setGameAuthor("Worsewarn")
                 .setTags("@lang/heroes.game_tags/")

@@ -39,21 +39,19 @@ public class EntityDamageByEntity implements Listener {
         if(event.getDamager() instanceof Player player) {
 
             HPlayer hPlayer = pl.getPlayer(player);
-            ItemStack item = player.getItemInUse();
+            ItemStack item = player.getItemInHand();
 
-            if(item != null) {
+            if(item.getType().equals(Material.IRON_SWORD)) {
 
-                if(item.getType().equals(Material.IRON_SWORD)) {
+                float sword = hPlayer.getAttributeValue(PlayerAttribute.SWORD);
 
-                    float sword = hPlayer.getAttributeValue(PlayerAttribute.SWORD);
+                double actualDamages = event.getDamage();
+                double modifiedDamages = actualDamages + MathsUtils.getNumberByPercent(event.getDamage(),  sword);
+                event.setDamage(modifiedDamages);
 
-                    double actualDamages = event.getDamage();
-                    double modifiedDamages = actualDamages + MathsUtils.getNumberByPercent(event.getDamage(),  sword);
-                    event.setDamage(modifiedDamages);
-
-                    Bukkit.getLogger().info("[DEBUG] Sword bonus applied : " + actualDamages + " => " + modifiedDamages);
-                }
+                Bukkit.getLogger().info("[DEBUG] Sword bonus applied : " + actualDamages + " => " + modifiedDamages);
             }
+
         }
 
         if(event.getDamager() instanceof Arrow arrow) {
@@ -61,13 +59,14 @@ public class EntityDamageByEntity implements Listener {
             if(arrow.getShooter() instanceof Player player) {
 
                 HPlayer hPlayer = pl.getPlayer(player);
-                float bow = hPlayer.getAttributeValue(PlayerAttribute.BOW) + hPlayer.getAttributeLevel(PlayerAttribute.BOW) >= 10 ? 50 : 0;
+                float bow = hPlayer.getAttributeValue(PlayerAttribute.BOW) + (hPlayer.getAttributeLevel(PlayerAttribute.BOW) >= 10 ? 50 : 0);
+                Bukkit.getLogger().info("debug bow value=" + bow);
 
                 double actualDamages = event.getDamage();
                 double modifiedDamages = actualDamages + MathsUtils.getNumberByPercent(event.getDamage(),  bow);
                 event.setDamage(modifiedDamages);
 
-                Bukkit.getLogger().info("[DEBUG] Bonus bow applied : " + actualDamages + " => " + modifiedDamages);
+                Bukkit.getLogger().info("[DEBUG] Bonus bow applied : " + actualDamages + " => " + modifiedDamages + " (level = " + hPlayer.getAttributeLevel(PlayerAttribute.BOW) + ")");
 
             }
         }
