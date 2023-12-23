@@ -24,11 +24,16 @@ public class PlayerJoinGame implements Listener {
         HPlayer hPlayer = pl.getPlayer(player);
         CosmoxPlayer cosmoxPlayer = pl.getAPI().getPlayer(player);
 
-        if(cosmoxPlayer.getTeam().equals(Team.NO_TEAM)) pl.getManager().addPlayerToPendingSpawns(player.getUniqueId());
+        if(cosmoxPlayer.getTeam().equals(Team.NO_TEAM)) {
+            pl.getManager().addPlayerToPendingSpawns(player.getUniqueId());
+            player.getInventory().clear();
+        }
 
         cosmoxPlayer.setScoreboard(pl.getManager().getScoreboard(player));
         pl.getManager().removePlayerBossBar(player);
         pl.getManager().addPlayerBossBar(player, cosmoxPlayer.getRedisPlayer().getLanguage());
+
+        player.teleport(pl.getManager().getMapCenter());
 
     }
 }
