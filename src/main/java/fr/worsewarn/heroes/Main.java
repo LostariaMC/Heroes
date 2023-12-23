@@ -89,7 +89,7 @@ public class Main extends JavaPlugin {
                 .setTags("@lang/heroes.game_tags/")
                 .setScoreboardOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER)
                 .setPreparationTime(15)
-                .hideInHub()
+                .activeJoinInGame()
                 ;
 
         api.registerNewGame(game);
