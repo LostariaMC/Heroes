@@ -17,6 +17,10 @@ public class PlayerInteract implements Listener {
     @EventHandler
     public void PlayerInteractEvent(PlayerInteractEvent event) {
 
+        if(event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
+
+            event.setCancelled(true);
+        }
 
     }
 }
