@@ -220,7 +220,7 @@ public class GameManager {
                     if(!entity.getTargetType().equals(targetType)) continue;
                     if(entity.isLocked()) continue;
 
-                    int chance = entity.getAttribute(EntityAttribute.SPAWN_PERCENT) * playersCount;
+                    int chance = Math.round(entity.getAttribute(EntityAttribute.SPAWN_PERCENT) * (playersCount * 0.5F));
 
                     while(chance >= 0) {
 
@@ -348,6 +348,7 @@ public class GameManager {
             int next_round = 8;
 
             respawnPendingPlayers();
+            villager.setHealth(villager.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
             new MessageBuilder(pl.getGame().getPrefix() + ChatColor.of("#74cc8c") + "@lang/heroes.game_round_ended/", true).formatted(next_round).broadcast();
             Bukkit.getOnlinePlayers().forEach(all -> all.playSound(all.getLocation(), Sound.ENTITY_VILLAGER_YES, SoundCategory.AMBIENT, 1, 1.2F));
 
