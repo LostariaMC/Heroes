@@ -1,6 +1,7 @@
 package fr.worsewarn.heroes.events;
 
 import fr.worsewarn.heroes.Main;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -20,5 +21,7 @@ public class InventoryClick implements Listener {
     public void InventoryClickEvent(InventoryClickEvent event) {
 
         if(Arrays.asList(InventoryType.SlotType.ARMOR, InventoryType.SlotType.CRAFTING).contains(event.getSlotType())) event.setCancelled(true);
+
+        event.setCancelled(true);
     }
 }
