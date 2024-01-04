@@ -350,7 +350,13 @@ public class GameManager {
             respawnPendingPlayers();
             villager.setHealth(villager.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
             new MessageBuilder(pl.getGame().getPrefix() + ChatColor.of("#74cc8c") + "@lang/heroes.game_round_ended/", true).formatted(next_round).broadcast();
-            Bukkit.getOnlinePlayers().forEach(all -> all.playSound(all.getLocation(), Sound.ENTITY_VILLAGER_YES, SoundCategory.AMBIENT, 1, 1.2F));
+            Bukkit.getOnlinePlayers().forEach(all -> {
+
+                all.playSound(all.getLocation(), Sound.ENTITY_VILLAGER_YES, SoundCategory.AMBIENT, 1, 1.2F);
+
+                CosmoxPlayer cosmoxPlayer = WrappedPlayer.of(all).toCosmox();
+                if(!cosmoxPlayer.getTeam().equals(Team.SPEC)) cosmoxPlayer.addMolecules(Math.sqrt(0.45F * (difficulty+1)), new MessageBuilder("@lang/heroes.experience_round_end_description/").toString(all));
+            });
 
             new BukkitRunnable() {
 
