@@ -6,7 +6,7 @@ import fr.worsewarn.heroes.entities.TargetType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_20_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
 import org.bukkit.entity.EntityType;
 
 public class Vex extends HEntity implements Flyable {
